@@ -11,9 +11,9 @@ module ExpenseTracker
 
     let(:ledger) { instance_double('ExpenseTracker::Ledger') }
     let(:expense) { { 'some' => 'data'} }
+    let(:parsed) { JSON.parse(last_response.body) }
 
     describe 'POST /expenses' do
-      let(:parsed) { JSON.parse(last_response.body) }
 
       context 'when the expense is successfully recorded' do
 
@@ -60,7 +60,7 @@ module ExpenseTracker
       let(:date) { '2018-04-20' }
 
       context 'when expenses exits on the given date' do
-        let(:expenses_on_date) { JSON.generate([{'some' => 'data'}]) }
+        let(:expenses_on_date) { [{'some' => 'data'}] }
         before do
           allow(ledger).to receive(:expenses_on)
             .with(date)
@@ -69,7 +69,7 @@ module ExpenseTracker
         it 'returns the expense record as JSON' do
           get "/expenses/#{date}"
 
-          expect(last_response.body).to eq(expenses_on_date)
+          expect(parsed).to eq(expenses_on_date)
         end
         it 'responds with a 200' do
           get "/expenses/#{date}"
@@ -79,17 +79,16 @@ module ExpenseTracker
       end
 
       context 'when there are no expenses on the given date' do
-        let(:empty_json_array) { JSON.generate([]) }
         before do
           allow(ledger).to receive(:expenses_on)
                                .with(date)
-                               .and_return(empty_json_array)
+                               .and_return([])
         end
 
         it 'returns an empty array as JSON' do
           get "/expenses/#{date}"
 
-          expect(last_response.body).to eq(empty_json_array)
+          expect(parsed).to eq([])
         end
         it 'responds with a 200' do
           get "/expenses/#{date}"
